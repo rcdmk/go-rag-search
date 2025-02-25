@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #ports:
+      #- 3000:3000
+    env_file:
+      - .env
+    environment:
+      - LLAMA_HOST=host.docker.internal
+      - PG_HOST=pgvector
+    depends_on:
+      pgvector:
+        condition: service_healthy
+
+  pgvector:
+    image: pgvector/pgvector:pg15
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    volumes:
+      - ./pgvector.sql:/docker-entrypoint-initdb.d/pgvector.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "$PG_USER:$PG_PASSWORD@$PG_HOST:5432/$PG_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
+
