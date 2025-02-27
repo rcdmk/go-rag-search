@@ -4,14 +4,16 @@ services:
       context: .
       dockerfile: Dockerfile
     #ports:
-      #- 3000:3000
+    #- 3000:3000
     env_file:
       - .env
     environment:
-      - LLAMA_HOST=host.docker.internal
+      - LLAMA_HOST=ollama
       - PG_HOST=pgvector
     depends_on:
       pgvector:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
 
   pgvector:
@@ -23,9 +25,34 @@ services:
     volumes:
       - ./pgvector.sql:/docker-entrypoint-initdb.d/pgvector.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "$PG_USER:$PG_PASSWORD@$PG_HOST:5432/$PG_DB"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready",
+          "postgres://$PG_USER:$PG_PASSWORD@$PG_HOST:5432/$PG_DB",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 1s
+    mem_reservation: 3.5GiB
 
+  ollama:
+    image: ollama/ollama
+    ports:
+      - 11434:11434
+    volumes:
+      - ./ollama-run.sh:/bin/ollama-run.sh
+      - ./ollama/ollama:/root/.ollama
+    entrypoint: /bin/ollama-run.sh
+    mem_reservation: 3.5GiB
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - |
+          test -f /tmp/ollama_ready && \
+          bash -c '</dev/tcp/localhost/11434'  # Checks if Ollama is accepting connections
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 5s

@@ -1,0 +1,8 @@
+.env
+.vscode
+ollama
+docker-compose.yaml
+Dockerfile
+*.sh
+*.sql
+*.md
