@@ -1,6 +1,6 @@
 module github.com/rcdmk/go-rag-tutorial
 
-go 1.24.0
+go 1.22.0
 
 require github.com/tmc/langchaingo v0.1.13
 
