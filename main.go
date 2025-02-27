@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/tmc/langchaingo/chains"
 	"github.com/tmc/langchaingo/documentloaders"
@@ -23,18 +24,19 @@ func main() {
 	if llamaHost == "" {
 		llamaHost = "localhost"
 	}
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Minute)
 
 	llm, err := ollama.New(ollama.WithModel("llama3.2"), ollama.WithServerURL("http://"+llamaHost+":11434"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	store, err := getVectorStore(llm)
+	store, err := getVectorStore(ctx, llm)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = loadDocs("https://support.atlassian.com/jira-software-cloud/docs/what-is-the-jira-family-of-products/", store)
+	err = loadDocs(ctx, "https://support.atlassian.com/jira-software-cloud/docs/what-is-the-jira-family-of-products/", store)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,10 +46,9 @@ func main() {
 	fmt.Println()
 	fmt.Println(question)
 
-	ctx := context.Background()
 	numOfResults := 3
 
-	result, err := chains.Run(
+	_, err = chains.Run(
 		ctx,
 		chains.NewRetrievalQAFromLLM(
 			llm,
@@ -65,11 +66,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_ = result
 	fmt.Println()
 }
 
-func getVectorStore(llm *ollama.LLM) (pgvector.Store, error) {
+func getVectorStore(ctx context.Context, llm *ollama.LLM) (pgvector.Store, error) {
 
 	host := os.Getenv("PG_HOST")
 	if host == "" {
@@ -100,7 +100,7 @@ func getVectorStore(llm *ollama.LLM) (pgvector.Store, error) {
 		log.Fatal(err)
 	}
 	store, err := pgvector.New(
-		context.Background(),
+		ctx,
 		pgvector.WithPreDeleteCollection(true),
 		pgvector.WithConnectionURL(pgConnURL),
 		pgvector.WithEmbedder(embedder),
@@ -114,19 +114,18 @@ func getVectorStore(llm *ollama.LLM) (pgvector.Store, error) {
 	return store, nil
 }
 
-func loadDocs(source string, store pgvector.Store) error {
+func loadDocs(ctx context.Context, source string, store pgvector.Store) error {
 
 	fmt.Println("loading data from", source)
 
-	docs, err := getDocs(source)
+	docs, err := getDocs(ctx, source)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("no. of documents to be loaded", len(docs))
 
-	_, err = store.AddDocuments(context.Background(), docs)
-
+	_, err = store.AddDocuments(ctx, docs)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func loadDocs(source string, store pgvector.Store) error {
 	return nil
 }
 
-func getDocs(source string) ([]schema.Document, error) {
+func getDocs(ctx context.Context, source string) ([]schema.Document, error) {
 	resp, err := http.Get(source)
 	if err != nil {
 		return nil, err
@@ -144,7 +143,7 @@ func getDocs(source string) ([]schema.Document, error) {
 
 	defer resp.Body.Close()
 
-	docs, err := documentloaders.NewHTML(resp.Body).LoadAndSplit(context.Background(), textsplitter.NewRecursiveCharacter())
+	docs, err := documentloaders.NewHTML(resp.Body).LoadAndSplit(ctx, textsplitter.NewRecursiveCharacter())
 	if err != nil {
 		return nil, err
 	}
