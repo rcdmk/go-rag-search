@@ -38,5 +38,9 @@ expose PG_USER=postgres
 expose PG_PASSWORD=postgres
 expose PG_DB=postgres
 
-go run .
+go run . -load
 ```
+
+## Loading data
+
+The docker image for the app always loads the data from the remote source, but if you are running it locally, you just need to run with the `-local` flag for the first time. Next runs can run a lot faster without that, as the data would be already loaded into the database.
