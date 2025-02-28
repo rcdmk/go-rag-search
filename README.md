@@ -6,18 +6,26 @@ This is a PoC to load data from an online source like Confluence in order to hel
 ## Prerequisites
 
 1. [Go 1.20+](https://go.dev/dl/)
+2. [Docker](https://www.docker.com/)
+
+### Local prerequisites
+
+If you wish to make full use of the machine resources, the best option is to run the app locally, using a locally running Ollama server.
+In that case, the prerequisites would be:
+
+1. [Go 1.20+](https://go.dev/dl/)
 2. [Ollama 0.5+](https://ollama.com/download) with llama 3.2
-3. [Docker](https://www.docker.com/)
+3. [Postgres 15+](https://www.postgresql.org/download/)
 
 ## How to run it
 
-To run, once Ollama is running, navigate to the repository root and run:
+To run the complete suite, navigate to the repository root and run:
 
 ```sh
 docker-compose up
 ```
 
-That will spin up a Postgres container tweaked for pgvector store, and will also run the application once the database is ready.
+That will spin up a Postgres container tweaked for pgvector store, an Ollama container with llama3.2, and will also run the application once the database is ready.
 
 To run it locally, outside of the container, it is possible to use an already existing Postgres instance or run the database container and connect to it:
 
