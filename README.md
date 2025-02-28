@@ -32,11 +32,11 @@ To run it locally, outside of the container, it is possible to use an already ex
 ```sh
 docker-compose up pgvector -d # only once
 
-expose LLAMA_HOST=localhost
-expose PG_HOST=localhost
-expose PG_USER=postgres
-expose PG_PASSWORD=postgres
-expose PG_DB=postgres
+export LLAMA_HOST=localhost
+export PG_HOST=localhost
+export PG_USER=postgres
+export PG_PASSWORD=postgres
+export PG_DB=postgres
 
 go run . -load
 ```
@@ -44,3 +44,17 @@ go run . -load
 ## Loading data
 
 The docker image for the app always loads the data from the remote source, but if you are running it locally, you just need to run with the `-local` flag for the first time. Next runs can run a lot faster without that, as the data would be already loaded into the database.
+
+## Environment Variables
+
+Make sure to set the following environment variables before running the application:
+
+- `LLAMA_HOST`: The host address for the Ollama server.
+- `PG_HOST`: The host address for the Postgres database.
+- `PG_USER`: The username for the Postgres database.
+- `PG_PASSWORD`: The password for the Postgres database.
+- `PG_DB`: The database name for the Postgres database.
+
+## Troubleshooting
+
+If you encounter any issues, ensure that all prerequisites are installed and properly configured. Check the logs for any error messages and verify that all services are running correctly.
