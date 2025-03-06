@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -37,8 +40,31 @@ func main() {
 		}
 	}
 
-	err = askAssistant(ctx, llm, store)
-	if err != nil {
-		log.Fatal(err)
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Print("\nEnter your question: ")
+		scanner.Scan()
+
+		question := strings.TrimSpace(scanner.Text())
+		if len(question) == 0 {
+			continue
+		}
+
+		command := strings.ToLower(question)
+
+		switch command {
+		case "exit", "quit":
+			return
+		}
+
+		fmt.Print("Answer: ")
+
+		err = askAssistant(ctx, llm, store, question)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println()
 	}
 }

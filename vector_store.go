@@ -12,7 +12,7 @@ import (
 	"github.com/tmc/langchaingo/vectorstores/pgvector"
 )
 
-func getVectorStore(ctx context.Context, llm *ollama.LLM) (pgvector.Store, error) {
+func getVectorStore(ctx context.Context, llm *ollama.LLM, deleteCollection bool) (pgvector.Store, error) {
 	host := os.Getenv("PG_HOST")
 	if host == "" {
 		log.Fatal("missing PG_HOST")
@@ -43,15 +43,13 @@ func getVectorStore(ctx context.Context, llm *ollama.LLM) (pgvector.Store, error
 	}
 	store, err := pgvector.New(
 		ctx,
-		pgvector.WithPreDeleteCollection(true),
+		pgvector.WithPreDeleteCollection(deleteCollection),
 		pgvector.WithConnectionURL(pgConnURL),
 		pgvector.WithEmbedder(embedder),
 	)
 	if err != nil {
 		return store, err
 	}
-
-	fmt.Println("vector store ready")
 
 	return store, nil
 }

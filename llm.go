@@ -20,14 +20,8 @@ func getLLM() (*ollama.LLM, error) {
 	return ollama.New(ollama.WithModel("llama3.2"), ollama.WithServerURL("http://"+llamaHost+":11434"))
 }
 
-func askAssistant(ctx context.Context, llm *ollama.LLM, store pgvector.Store) error {
-	questionTemplate := "Human: %s\nAssistant:"
-	question := fmt.Sprintf(questionTemplate, "Who can see projects in Jira?")
-
-	fmt.Println()
-	fmt.Println(question)
-
-	numOfResults := 5
+func askAssistant(ctx context.Context, llm *ollama.LLM, store pgvector.Store, question string) error {
+	numOfResults := 10
 
 	_, err := chains.Run(
 		ctx,
@@ -37,13 +31,12 @@ func askAssistant(ctx context.Context, llm *ollama.LLM, store pgvector.Store) er
 		),
 		question,
 		chains.WithTemperature(0.8),
-		chains.WithMaxTokens(2048),
+		chains.WithMaxTokens(8091),
 		chains.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
 			fmt.Print(string(chunk))
 			return nil
 		}),
 	)
-	fmt.Println()
 
 	return err
 }
